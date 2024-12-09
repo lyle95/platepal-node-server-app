@@ -14,6 +14,15 @@ import LikeRoutes from './likes/routes.js';
 import MongoStore from 'connect-mongo';
 const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/platepal"
 mongoose.connect(CONNECTION_STRING);
+mongoose.connection.on('connected', () => {
+  console.log(`Connected to MongoDB database: ${mongoose.connection.name}`);
+  console.log(`Connected to MongoDB host: ${mongoose.connection.host}`);
+  console.log(`MongoDB connection string: ${CONNECTION_STRING}`);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Error connecting to MongoDB:', err);
+});
 const app = express()
 const corsOptions = {
   credentials: true,
