@@ -11,19 +11,25 @@ import RecipeRoutes from './recipes/routes.js';
 import FollowRoutes from './follows/routes.js';
 import CommentRoutes from './comments/routes.js';
 import LikeRoutes from './likes/routes.js';
+import MongoStore from 'connect-mongo';
 const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/platepal"
 mongoose.connect(CONNECTION_STRING);
 const app = express()
-app.use(cors({
+const corsOptions = {
   credentials: true,
-  origin: process.env.NODE_ENV === "production" 
-      ? process.env.NETLIFY_URL 
-      : "http://localhost:3000",
-}));
+  origin: process.env.NODE_ENV === "production"
+    ? [process.env.NETLIFY_URL, "https://platepal-node-server-app.onrender.com"]
+    : "http://localhost:3000",
+};
+app.use(cors(corsOptions));
 const sessionOptions = {
-    secret: process.env.SESSION_SECRET || "platepal",
-    resave: false,
-    saveUninitialized: false,
+  secret: process.env.SESSION_SECRET || "platepal",
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+      mongoUrl: process.env.MONGO_CONNECTION_STRING,
+      collectionName: 'sessions',
+  }),
 };
 if (process.env.NODE_ENV === "production") {
   sessionOptions.proxy = true;
@@ -33,10 +39,10 @@ if (process.env.NODE_ENV === "production") {
       domain: new URL(process.env.NODE_SERVER_DOMAIN).hostname,
   };
 }
+app.use(session(sessionOptions));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(session(sessionOptions));  
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 Hello(app);
@@ -47,5 +53,8 @@ CommentRoutes(app);
 LikeRoutes(app);
 const PORT = 8080; 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  const serverURL = process.env.NODE_ENV === "production"
+    ? process.env.NODE_SERVER_DOMAIN
+    : `http://localhost:${PORT}`;
+console.log(`Server is running on ${serverURL}`);
 });
