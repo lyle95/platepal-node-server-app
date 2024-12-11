@@ -1,9 +1,11 @@
 import User from "./model.js";
+import FollowModel from "../follows/model.js";
+import mongoose from 'mongoose';
 
 // Create a new user
-export const createUser = async ({ username, email, password, role = "Cook" }) => {
+export const createUser = async ({ username, email, password }) => {
     try {
-        const user = new User({ username, email, password, role }); // Ensure the schema matches
+        const user = new User({ username, email, password }); // Ensure the schema matches
         await user.save();
         return user;
     } catch (err) {
@@ -33,11 +35,15 @@ export const findUserByUsername = async (username) => {
 // Find a user by ID
 export const findUserById = async (userId) => {
     try {
-        return await User.findById(userId).select("-password").populate("followers following");
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            throw new Error('Invalid ObjectId');
+        }
+        return await User.findById(userId).select("-password"); // Remove `.populate()` calls
     } catch (error) {
         throw new Error(`Error finding user by ID: ${error.message}`);
     }
-};
+  };
+  
 
 // Find a user by credetials
 export const findUserByCredentials = async (username, password) => {
@@ -71,6 +77,7 @@ export const findUsersByPartialUsername = async (partialUsername) => {
 
 // Update a user
 export const updateUser = async (userId, user) => {
+    console.log('Updating user in DB:', user); 
     try {
         return await User.updateOne({ _id: userId }, { $set: user });
     } catch (error) {
@@ -87,7 +94,31 @@ export const deleteUser = async (userId) => {
     }
 };
 
-
 export const findUserByEmail = async (email) => {
   return User.findOne({ email });
 };
+
+export const searchUsersWithFollowCounts = async (username, currentUserId) => {
+    try {
+      const users = await User.find({ username: new RegExp(username, "i") }).select("_id username role");
+      const results = await Promise.all(
+        users.map(async (user) => {
+            const followersCount = await FollowModel.countDocuments({ following: user._id });
+            const followingCount = await FollowModel.countDocuments({ follower: user._id });
+            const isFollowing = !!(await FollowModel.exists({ follower: currentUserId, following: user._id }));
+            return {
+                ...user.toObject(),
+                followers: followersCount, // Total followers
+                following: followingCount, // Total following
+                isFollowing: !!isFollowing, // Whether the current user follows this user
+            };
+        })
+      );
+      return results;
+    } catch (error) {
+      throw new Error(`Error searching users: ${error.message}`);
+    }
+  };  
+
+
+

@@ -45,14 +45,14 @@ export default function LikeRoutes(app) {
     };
     app.get("/api/likes/recipe/:recipeId", countLikesByRecipe);
 
-    const findLikedRecipesByUser = async (req, res) => {
+    const getFavoriteRecipes = async (req, res) => {
         const { userId } = req.params;
         try {
-            const recipes = await dao.findLikedRecipesByUser(userId);
-            res.json(recipes);
+          const favorites = await dao.findFavoriteRecipesByUser(userId);
+          res.json(favorites);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+          res.status(500).json({ message: error.message });
         }
-    };
-    app.get("/api/likes/user/:userId", findLikedRecipesByUser);
+      };
+    app.get("/api/users/:userId/favorites", getFavoriteRecipes);
 }

@@ -4,7 +4,6 @@ export const followUser = async (followerId, followingId) => {
     try {
         const existingFollow = await model.findOne({ follower: followerId, following: followingId });
         if (existingFollow) throw new Error("Already following this user.");
-
         return await model.create({ follower: followerId, following: followingId });
     } catch (error) {
         throw new Error(`Error following user: ${error.message}`);

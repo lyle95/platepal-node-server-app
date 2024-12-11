@@ -12,7 +12,7 @@ const recipesSchema = new mongoose.Schema(
     prepTime: { type: Number }, 
     createdBy: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", 
+      ref: "UserModel", 
       required: true 
     }, 
     createdAt: { type: Date, default: Date.now }, 
