@@ -42,4 +42,6 @@ RecipeRoutes(app);
 FollowRoutes(app);
 CommentRoutes(app);
 LikeRoutes(app);
-app.listen(process.env.PORT || 8080)
+app.listen(process.env.PORT || 8080, () => {
+  console.log( `Server is running on ${PORT}`);
+})
