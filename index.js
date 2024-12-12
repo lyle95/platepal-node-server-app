@@ -43,4 +43,6 @@ FollowRoutes(app);
 CommentRoutes(app);
 LikeRoutes(app);
 const SVPORT = process.env.PORT || "http://localhost:8080";
-app.listen(SVPORT);
+app.listen(SVPORT, () => {
+  console.log(`Server is running on ${SVPORT}`);
+});
